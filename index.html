@@ -1,0 +1,41 @@
+<!DOCTYPE html><html lang="ja">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Fleeks2025セミナー動画</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-sm">
+  <h1 class="text-xl font-bold text-center py-4">Fleeks2025セミナー動画</h1>
+  <div id="gallery" class="grid gap-4 px-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"></div>
+
+  <script>
+    /* ▼▼ 自分の API キーに変更してください ▼▼ */
+    const KEY = 'AIzaSyAdD8IeQc4hFGgRvUV3iFhY1TPgaH9w4og';
+
+    (async () => {
+      const ids = await fetch('videos.json').then(r => r.json());
+      const api = `https://www.googleapis.com/youtube/v3/videos`
+                + `?part=snippet,status&id=${ids.join(',')}&key=${KEY}`;
+      const res  = await fetch(api).then(r => r.json());
+
+      const list = (res.items ?? [])
+        .filter(v => v.status.privacyStatus === 'unlisted')
+        .sort((a,b) => new Date(b.snippet.publishedAt) - new Date(a.snippet.publishedAt));
+
+      document.getElementById('gallery').innerHTML =
+        list.map(v => `
+          <a href="https://youtu.be/${v.id}" target="_blank"
+             class="block bg-white rounded-lg shadow hover:shadow-md transition">
+            <img src="${v.snippet.thumbnails.high.url}"
+                 alt="${v.snippet.title}"
+                 class="rounded-t-lg w-full aspect-video object-cover">
+            <div class="p-2">
+              <p class="font-medium line-clamp-2">${v.snippet.title}</p>
+              <time class="text-gray-500">${v.snippet.publishedAt.slice(0,10)}</time>
+            </div>
+          </a>
+        `).join('') || '<p class="text-gray-500">対象の動画がありません。</p>';
+    })();
+  </script>
+</body>
+</html>
